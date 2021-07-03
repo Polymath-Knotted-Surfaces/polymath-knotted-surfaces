@@ -5,11 +5,11 @@ This document will get you to install Git and Python for working with SnapPy.
 ### Tools Needed:
 Macs:
 * [Homebrew](https://docs.brew.sh/Installation)
-* [MiniForge3](https://github.com/conda-forge/miniforge) (Make sure to grab the Miniforge3 version for your system!)
+* [MiniForge3](https://github.com/conda-forge/miniforge) (Make sure to grab the ***Mambaforge*** version for your system!)
 
 Windows:
 * [GitForWindows](https://gitforwindows.org/)
-* [MiniForge3](https://github.com/conda-forge/miniforge) (Make sure to grab the Miniforge3 version for your system!)
+* [MiniForge3](https://github.com/conda-forge/miniforge) (Make sure to grab the ***Mambaforge*** version for your system! Mamba is a better version of Conda.)
 
 ---
 
@@ -26,8 +26,8 @@ First, we need to make sure git is properly setup.
 	6. We'll use GitHub at a later date for sharing code. For now, we just need it to be installed and setup.
 	
 Now, we're going to get Python setup.
-1. Test that Python and Miniforge3 was installed nicely by executing the command `conda --version`
-2. Run `conda upgrade --all -y` to update your packages.
-3. Run `conda install -y command jupyterlab` to add some default packages. (This will take some time, be patient!)
+1. Test that Python and Miniforge3 was installed nicely by executing the command `mamba --version`. The result should be something like `mamba 0.14.1` or a (higher) version.
+2. Run `mamba upgrade --all -y` to update your packages.
+3. Run `mamba install -y numpy pandas scipy plotnine jupyterlab jupyter cffi docutils  ipykernel ipython networkx matplotlib sympy click requests arrow toolz cython cytoolz path path.py pyrsistent qt qtawesome qtpy regex seaborn setuptools pip statsmodels spyder spyder-kernels tk toml pyyaml tqdm pillow` to add some default packages. (This will probably take some time, be patient!)
 4. Next, run `pip install -U snappy snappy-15-knots` to install snappy.
 5. We now test that the SnapPy installation was successful. Try running `python -m snappy.app`. If a window launches, you're good to go!
