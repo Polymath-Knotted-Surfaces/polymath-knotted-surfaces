@@ -5,7 +5,7 @@ from braidgenerator import *
 import spherogram as s
 import multiprocessing as m
 
-def genBraids(startingBraid:list[int]=[1,2,-2,-1], numStrands:int=8, numBraids:int=1000, maxLen:int=10, numSteps:int=10) -> pd.DataFrame:
+def randomBraids(startingBraid:list[int]=[1,2,-2,-1], numStrands:int=8, numBraids:int=1000, maxLen:int=10, numSteps:int=10) -> pd.DataFrame:
     try:
         assert (numStrands > 2) and maxLen > 3
     except:
