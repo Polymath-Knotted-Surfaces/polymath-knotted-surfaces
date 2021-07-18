@@ -25,6 +25,58 @@ def sigma(k, n, s):
 
     return horizontal_amalgam(tangles)
 
+# converts a word in Artin generators of braid group
+# to a tangle corresponding to the braid
+#  - word is represented as a list of integers
+#  - n is the number of strands
+def word_to_braid(word, n):
+    T = horizontal_amalgam(n*[sphereogram.IdentityBraid(1)])
+    for k in word:
+        s = 1 if k > 0 else -1
+        T = sigma(abs(k) - 1, n, s) * T
+    return T
+
+# converts list of pairs to cap diagram as a Tangle
+#  - pairs should be of the form (i,j) [1 <= i, j <= 2n] and represent a cap diagram
+def pairs_to_cap(pairs):
+    T = horizontal_amalgam((2*len(pairs))*[spherogram.IdentityBraid(1)]) # create 2n strands
+    for p in pairs:
+        join_strands(T.adjacent[T.n + p[0] - 1], T.adjacent[T.n + p[1] - 1])
+    return T
+
+# attaches cap diagram (usually from pairs_to_cap) to the top of tang
+def add_cap(T, cap):
+    if T.n != cap.n:
+        raise ValueError("The braid and cap must have the same number of strands")
+    return T * cap
+
+# attaches two tangles in the right way to check tri plane diagrams
+# returns a Link
+# implementation mimics implementation of __mul__ in Tangle class
+def attach(T1, T2):
+    if T1.n != T2.n:
+        raise ValueError("Both tangles must have the same number of strands")
+    A, B = T1.copy(), T2.copy()
+    a, b = A.adjacent, B.adjacent
+    n = A.n
+    for i in range(n):
+        join_strands(a[i], b[i])
+    return spherogram.Link(A.crossings + B.crossings, check_planarity=False)
+
+# returns True if and only if the link is an unlink
+def is_unlink(L):
+    return L.exterior().fundamental_group().relators() == []
+
+# returns True if and only if the three tangles form a triplane diagram
+def is_triplane(T1, T2, T3):
+    L12 = attach(T1, T2)
+    L23 = attach(T2, T3)
+    L31 = attach(T3, T1)
+    return is_unlink(L12) and is_unlink(L23) and is_unlink(L31)
+
+
+#######################################################################
+
 
 # creates the rainbow tangle where the end of the braid is put together in a rainbow effect
 def rainbow_tangle(n):
@@ -148,19 +200,3 @@ def extra_fancy(args):
     knot = tang.bridge_closure()
     surface_or_not(knot, tang, i)
     return
-
-# Fair warning, neither of the below 2 functions have been tested rigourously.
-# Please try to break them and if you do hopefully they give you some crumb of inspiration.
-def add_cap(tang: Tangle, cap):
-    if tang.n != 2 * len(cap):
-        raise ValueError("The braid and cap must have the same number of strands")
-    for l in cap:
-        join_strands(tang.adjacent[l[0]+tang.n-1], tang.adjacent[l[1]+tang.n-1])
-    return Tangle(n = tang.n, crossings = tang.crossings, entry_points = tang.adjacent[:tang.n])
-
-def attach(tang: Tangle, cap_diagram: Tangle):
-    if tang.n != cap_diagram.n:
-        raise ValueError("Both tangles must have the same number of strands")
-    for i in range(tang.n):
-        join_strands(tang.adjacent[i], cap_diagram.adjacent[i])
-    return Link(tang.crossings + cap_diagram.crossings, check_planarity = False)
