@@ -78,7 +78,7 @@ def random_tangle(n, k):
 
         linkcomps[i+1] = cross
         i += 2
-    print linkcomps
+    print(linkcomps)
     return extra_fancy(linkcomps)
 
 
@@ -149,3 +149,18 @@ def extra_fancy(args):
     surface_or_not(knot, tang, i)
     return
 
+# Fair warning, neither of the below 2 functions have been tested rigourously.
+# Please try to break them and if you do hopefully they give you some crumb of inspiration.
+def add_cap(tang: Tangle, cap):
+    if tang.n != 2 * len(cap):
+        raise ValueError("The braid and cap must have the same number of strands")
+    for l in cap:
+        join_strands(tang.adjacent[l[0]+tang.n-1], tang.adjacent[l[1]+tang.n-1])
+    return Tangle(n = tang.n, crossings = tang.crossings, entry_points = tang.adjacent[:tang.n])
+
+def attach(tang: Tangle, cap_diagram: Tangle):
+    if tang.n != cap_diagram.n:
+        raise ValueError("Both tangles must have the same number of strands")
+    for i in range(tang.n):
+        join_strands(tang.adjacent[i], cap_diagram.adjacent[tang.n-1-i])
+    return Link(tang.crossings + cap_diagram.crossings, check_planarity = False)
