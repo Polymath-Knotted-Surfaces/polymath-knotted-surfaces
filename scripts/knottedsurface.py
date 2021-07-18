@@ -162,5 +162,5 @@ def attach(tang: Tangle, cap_diagram: Tangle):
     if tang.n != cap_diagram.n:
         raise ValueError("Both tangles must have the same number of strands")
     for i in range(tang.n):
-        join_strands(tang.adjacent[i], cap_diagram.adjacent[tang.n-1-i])
+        join_strands(tang.adjacent[i], cap_diagram.adjacent[i])
     return Link(tang.crossings + cap_diagram.crossings, check_planarity = False)
