@@ -45,11 +45,19 @@ def pairs_to_cap(pairs):
         join_strands(T.adjacent[T.n + p[0] - 1], T.adjacent[T.n + p[1] - 1])
     return T
 
-# attaches cap diagram (usually from pairs_to_cap) to the top of tang
-def add_cap(T, cap):
+# attaches cap diagram (usually from pairs_to_cap) to the top of a tangle
+'''def add_cap(T, cap):
     if T.n != cap.n:
         raise ValueError("The braid and cap must have the same number of strands")
-    return T * cap
+    return T * cap'''
+
+# attaches a cap diagram in the form of a list[list[int]] to the top of a tangle 
+def add_cap(tang: spherogram.Tangle, cap):
+    if tang.n != 2 * len(cap):
+        raise ValueError("The braid and cap must have the same number of strands")
+    for l in cap:
+        join_strands(tang.adjacent[l[0]+tang.n-1], tang.adjacent[l[1]+tang.n-1])
+    return spherogram.Tangle(n = tang.n, crossings = tang.crossings, entry_points = tang.adjacent[:tang.n])
 
 # attaches two tangles in the right way to check tri plane diagrams
 # returns a Link
