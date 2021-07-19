@@ -3,7 +3,8 @@ import spherogram
 from spherogram.links.tangles import join_strands
 import sys
 import random
-
+from cytoolz.curried import *
+from snappy import Link
 sys.setrecursionlimit(1000000)
 
 
@@ -63,9 +64,28 @@ def attach(T1, T2):
         join_strands(a[i], b[i])
     return spherogram.Link(A.crossings + B.crossings, check_planarity=False)
 
+
+def unlink(n: int) -> Link:
+    return Link(braid_closure=list(interleave((range(1,n),range(-1,-n,-1)))))
+
+@curry
+def checkCovers(maxmod: int, L:Link) -> bool:
+    # returns true if Ext(L) has the same torsion numbers
+    # as the exterior of the same number of components as L for k = 3, ..., maxmod
+    n = len(L.link_components)
+    U = unlink(n)
+    Uhom = {k: U.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
+    Lhom = {k: L.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
+    return Uhom==Lhom
+
+
 # returns True if and only if the link is an unlink
-def is_unlink(L):
-    return L.exterior().fundamental_group().relators() == []
+def is_unlink(L, tol:int=17):
+    # issue: it is UNDECIDABLE (in the sense of Turing) to determine whether a given presentation is trivial. This might miss some.
+    # we can check if the n-component unlink has the same invariants as L. 
+    # An n-compoent unlink can be given as unlink = lambda n: Link(braid_closure=list(interleave((range(1,n),range(-1,-n,-1)))))
+    # L2 = unlink(2)
+    return L.exterior().fundamental_group().relators() == [] or checkCovers(17, L)
 
 # returns True if and only if the three tangles form a triplane diagram
 def is_triplane(T1, T2, T3):
