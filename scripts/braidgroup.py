@@ -2,9 +2,19 @@ from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 import sympy.combinatorics.free_groups as scf
 from itertools import product
-from cytoolz.curried import map, filter, reduce, pipe, curry, flip
+from cytoolz.curried import map, filter, reduce, pipe, curry, flip, valfilter,get
 from operator import mul, add, pow
 import collections.abc as c
+
+def dictTranspose(d:dict) -> dict: #returns a dict with keys the (hashed versions of) d.values and values the keys of d matching the (hashed) value.
+    new_dict = dict()
+    for key, value in d.items():
+        if hash(value) in new_dict:
+            new_dict[hash(value)].append(key)
+        else:
+            new_dict[hash(value)]=[key]
+    return new_dict
+
 
 def BraidGroup(n:int) -> FpGroup:
     generators = str().join([f"s{i}," for i in range(1, n)])
@@ -31,10 +41,20 @@ def wordToBraid(group: FpGroup, word: list[int]) -> list[scf.FreeGroupElement]:
     gens = group.generators
     return reduce(mul, [gens[i-1] if i>=1 else gens[abs(i)-1]**(-1) for i in word])
 
-def genBraids(numStrands: int, length: int) -> c.Generator[scf.FreeGroupElement, None, None]:
-    G = BraidGroup(numStrands)
+def genBraids(numStrands: int, length: int) -> c.Generator[list[int]], None, None]:
+    #G = BraidGroup(numStrands)
     return pipe(numStrands,
                 braidGens,
-                lambda s: words(s, length),
-                map(wordToBraid(G))
+                lambda s: words(s, length)#,
+                #map(wordToBraid(G))
                 )
+                
+def elimBraids(numStrands:int, braids: list[list[int]]) -> list[tuple[list[int], scf.FreeGroupElement]]:
+    G = BraidGroup(numStrands)
+    m = {i:wordToBraid(G, b) for i,b in enumerate(braids)}
+    mt = dictTranspose(m)
+    r = {k[0]:m[k[0]] for v,k in mt.items()} #keep only one braid word for each braid type.
+    return list(zip(get(m.keys(), braids), m.values())) #return pairs of braid, braid_as_word
+    
+ def braidsNoRepeats(numStrands:int, length:int) ->  list[tuple[list[int], scf.FreeGroupElement]]:
+    return elimBraids(numStrands, genBraids(numStrands, length))

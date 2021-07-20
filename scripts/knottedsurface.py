@@ -1,5 +1,5 @@
 import snappy
-import spherogram
+import spherogram as s
 from spherogram.links.tangles import join_strands
 import sys
 import random
@@ -18,9 +18,9 @@ def horizontal_amalgam(tangles):
 
 
 # creates each specific section of the tangle
-def sigma(k, n, s):
-    C = spherogram.RationalTangle(s)
-    Id = spherogram.IdentityBraid(1)
+def sigma(k, n, q):
+    C = s.RationalTangle(q)
+    Id = s.IdentityBraid(1)
 
     tangles = k*[Id] + [C] + (n - k - 2)*[Id]
 
@@ -31,16 +31,16 @@ def sigma(k, n, s):
 #  - word is represented as a list of integers
 #  - n is the number of strands
 def word_to_braid(word, n):
-    T = horizontal_amalgam(n*[sphereogram.IdentityBraid(1)])
+    T = horizontal_amalgam(n*[ s.IdentityBraid(1) ])
     for k in word:
-        s = 1 if k > 0 else -1
-        T = sigma(abs(k) - 1, n, s) * T
+        r = 1 if k > 0 else -1
+        T = sigma(abs(k) - 1, n, r) * T
     return T
 
 # converts list of pairs to cap diagram as a Tangle
 #  - pairs should be of the form (i,j) [1 <= i, j <= 2n] and represent a cap diagram
 def pairs_to_cap(pairs):
-    T = horizontal_amalgam((2*len(pairs))*[spherogram.IdentityBraid(1)]) # create 2n strands
+    T = horizontal_amalgam((2*len(pairs))*[s.IdentityBraid(1)]) # create 2n strands
     for p in pairs:
         join_strands(T.adjacent[T.n + p[0] - 1], T.adjacent[T.n + p[1] - 1])
     return T
@@ -52,12 +52,12 @@ def pairs_to_cap(pairs):
     return T * cap'''
 
 # attaches a cap diagram in the form of a list[list[int]] to the top of a tangle 
-def add_cap(tang: spherogram.Tangle, cap):
+def add_cap(tang: s.Tangle, cap):
     if tang.n != 2 * len(cap):
         raise ValueError("The braid and cap must have the same number of strands")
     for l in cap:
         join_strands(tang.adjacent[l[0]+tang.n-1], tang.adjacent[l[1]+tang.n-1])
-    return spherogram.Tangle(n = tang.n, crossings = tang.crossings, entry_points = tang.adjacent[:tang.n])
+    return s.Tangle(n = tang.n, crossings = tang.crossings, entry_points = tang.adjacent[:tang.n])
 
 # attaches two tangles in the right way to check tri plane diagrams
 # returns a Link
@@ -70,7 +70,7 @@ def attach(T1, T2):
     n = A.n
     for i in range(n):
         join_strands(a[i], b[i])
-    return spherogram.Link(A.crossings + B.crossings, check_planarity=False)
+    return s.Link(A.crossings + B.crossings, check_planarity=False)
 
 
 def unlink(n: int) -> Link:
@@ -81,19 +81,22 @@ def checkCovers(maxmod: int, L:Link) -> bool:
     # returns true if Ext(L) has the same torsion numbers
     # as the exterior of the same number of components as L for k = 3, ..., maxmod
     n = len(L.link_components)
-    U = unlink(n)
-    Uhom = {k: U.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
-    Lhom = {k: L.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
-    return Uhom==Lhom
+    if n == 0:
+        return True #return true for trivial links and skip the below computation.
+    else:
+        U = unlink(n)
+        Uhom = {k: U.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
+        Lhom = {k: L.exterior().covers(k, cover_type='cyclic')[0].homology() for k in range(3,maxmod+1)}
+        return Uhom==Lhom
 
 
 # returns True if and only if the link is an unlink
-def is_unlink(L, tol:int=17):
+def is_unlink(L, maxmod:int=17, tol:float=10**-4):
     # issue: it is UNDECIDABLE (in the sense of Turing) to determine whether a given presentation is trivial. This might miss some.
     # we can check if the n-component unlink has the same invariants as L. 
     # An n-compoent unlink can be given as unlink = lambda n: Link(braid_closure=list(interleave((range(1,n),range(-1,-n,-1)))))
     # L2 = unlink(2)
-    return L.exterior().fundamental_group().relators() == [] or checkCovers(17, L)
+    return L.exterior().fundamental_group().relators() == [] or checkCovers(maxmod, L) or abs(L.exterior.volume()) <= tol
 
 # returns True if and only if the three tangles form a triplane diagram
 def is_triplane(T1, T2, T3):
@@ -111,7 +114,7 @@ def rainbow_tangle(n):
 
     place = n-1
     round = (n/2)-1
-    bow = spherogram.IdentityBraid(n)
+    bow = s.IdentityBraid(n)
     i = 1
 
     while (i <= round):
@@ -132,7 +135,7 @@ def smiley_tangle(n):
 
     place = n-1
     j = 2
-    smile = spherogram.IdentityBraid(n)
+    smile = s.IdentityBraid(n)
 
     while(j <= place):
         k = n - j
