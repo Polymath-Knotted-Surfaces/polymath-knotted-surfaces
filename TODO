@@ -1,0 +1,6 @@
+* Documentation / Code Comments
+* Figure out if braidgroup.elimBraids is actually working?
+* Speed up braid generation code cache/dynamic programming. Write all normal forms of length k to drive.
+* Sage to solve WP?
+* Can we get a better upper bound than c+2b?
+* Figure out ways to parallelize code.

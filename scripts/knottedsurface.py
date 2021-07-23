@@ -26,11 +26,11 @@ def sigma(k, n, q):
 
     return horizontal_amalgam(tangles)
 
-# converts a word in Artin generators of braid group
+# converts a tuple in Artin generators of braid group
 # to a tangle corresponding to the braid
 #  - word is represented as a list of integers
 #  - n is the number of strands
-def word_to_braid(word, n):
+def tuple_to_braid(word, n):
     T = horizontal_amalgam(n*[ s.IdentityBraid(1) ])
     for k in word:
         r = 1 if k > 0 else -1
@@ -96,7 +96,7 @@ def is_unlink(L, maxmod:int=17, tol:float=10**-4):
     # we can check if the n-component unlink has the same invariants as L. 
     # An n-compoent unlink can be given as unlink = lambda n: Link(braid_closure=list(interleave((range(1,n),range(-1,-n,-1)))))
     # L2 = unlink(2)
-    return L.exterior().fundamental_group().relators() == [] or checkCovers(maxmod, L) or abs(L.exterior.volume()) <= tol
+    return L.exterior().fundamental_group().relators() == [] or checkCovers(maxmod, L) or abs(L.exterior().volume()) <= tol
 
 # returns True if and only if the three tangles form a triplane diagram
 def is_triplane(T1, T2, T3):
