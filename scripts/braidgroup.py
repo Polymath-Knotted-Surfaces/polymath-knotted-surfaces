@@ -5,6 +5,8 @@ from itertools import product
 from cytoolz import reduce, pipe, curry, flip, valfilter, get
 from operator import mul, add, pow
 import collections.abc as c
+import csv
+import os
 
 def dictTranspose(d:dict) -> dict: #returns a dict with keys the (hashed versions of) d.values and values the keys of d matching the (hashed) value.
     new_dict = dict()
@@ -35,9 +37,6 @@ def words(a:list[str], k:int) -> c.Generator[list[str], None, None]: #generate a
 
 #words(A(n)) is a new function w whose input is k, an integer, and it spits out all words of length k on A.
 
-
-# @curry
-# def wordToBraid( numStrands: int, word: list[int]) -> list[scf.FreeGroupElement]:
 @curry
 def wordToBraid(group: FpGroup, word: list[int]) -> list[scf.FreeGroupElement]:
     # G = BraidGroup(n)
@@ -62,5 +61,53 @@ def elimBraids(numStrands:int, braids: list[list[int]]) -> list[tuple[list[int],
     # return list(zip(get(list(m.keys()), braids, default=None), list(m.values())#return pairs of braid, braid_as_word
     return [(braids[k], v) for k, v in r.items()] #returns braid_as_tuple, braid_as_word
 
-def braidsNoRepeats(numStrands:int, length:int) ->  list[tuple[list[int], scf.FreeGroupElement]]:
-    return elimBraids(numStrands, list(genBraids(numStrands, length)))
+# creates a file with a standard way of naming and writes reduced_braids to it
+# mainly just here to unclutter braidsNoRepeats()
+def createFile(numStrands:int, length:int, reduced_braids:list[list[int]]) -> list[list[int]]:
+    with open('../braid_lists/b{}_k{}.csv'.format(numStrands, length), 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(reduced_braids)
+    return reduced_braids
+
+def braidsNoRepeats(numStrands:int, length:int, recalculate = False) ->  list[list[int]]:
+    if numStrands < 0 or numStrands % 2 != 0:
+        raise ValueError('numStrands must be a positive even number')
+    try:
+        if recalculate:
+            raise ValueError('recalculate = True') # go to the except block
+        with open('../braid_lists/b{}_k{}.csv'.format(numStrands, length), 'r', newline='') as file:
+            reader = csv.reader(file)
+            return list(reader) # if the desired list has already been created, returns it
+    except:
+        # print('excepted') # for debugging
+        if length == 0: # this 'if' instead of storing an empty file
+            return [[]]
+        
+        braid_gens = braidGens(numStrands)
+        
+        if length == 1: # will only run the first time braidsNoRepeats is called for a specific numStrands value
+            reduced_braids = [[i] for i in range(-numStrands+1,numStrands) if i != 0]
+            return createFile(numStrands, length, reduced_braids)
+        try: # if possible, reads from the file with length one less than desired
+            with open('../braid_lists/b{}_k{}.csv'.format(numStrands, length - 1), 'r', newline='') as file:
+                reader = csv.reader(file)
+                smaller_braids = list(reader)
+                # print('try', smaller_braids) # for debugging, seemingly working correctly
+            new_braids = []
+            for i in smaller_braids: # **process of creating new_braids can probably be made more efficient**
+                for j in braid_gens:
+                    new_braids.append([i[0], j])
+            # print('try', new_braids) # for debugging, seemingly working correctly
+            with_elements = list(zip(*elimBraids(numStrands, new_braids)))
+            reduced_braids = list(with_elements[0]) # because I think with_elements is a list(tuple(...)) at this point
+            print('try', reduced_braids)
+            return createFile(numStrands, length, reduced_braids)
+        except: # if the file with length one less than desired does not exist, create it with a recursive call
+            smaller_braids = braidsNoRepeats(numStrands, length - 1)
+            new_braids = []
+            for i in smaller_braids:
+                for j in braid_gens:
+                    new_braids.append([i[0], j])
+            with_elements = list(zip(*elimBraids(numStrands, new_braids)))
+            reduced_braids = list(with_elements[0]) # because I think with_elements is a list(tuple(...)) at this point
+            return createFile(numStrands, length, reduced_braids)
