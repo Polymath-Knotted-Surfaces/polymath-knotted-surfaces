@@ -93,6 +93,7 @@ def braidsNoRepeats(numStrands:int, length:int, recalculate:bool=False) ->  list
         
         if length == 1: # will only run the first time braidsNoRepeats is called for a specific numStrands value
             #reduced_braids = [[i] for i in range(-numStrands+1,numStrands) if i != 0] #no need for this line, we already have braid_gens that has this exact list.
+            braid_gens = [[i] for i in braid_gens]
             return createFile(numStrands, length, braid_gens)
         try: # if possible, reads from the file with length one less than desired
             smaller_braids = []
