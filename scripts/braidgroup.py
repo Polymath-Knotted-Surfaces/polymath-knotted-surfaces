@@ -107,13 +107,9 @@ def braidsNoRepeats(numStrands:int, length:int, recalculate:bool=False) ->  list
         braid_gens = braidGens(numStrands)
         
         if length == 1: # will only run the first time braidsNoRepeats is called for a specific numStrands value
-            reduced_braids = [[i] for i in range(-numStrands+1,numStrands) if i != 0] #no need for this line, we already have braid_gens that has this exact list.
-            return createFile(numStrands, length, reduced_braids)
-        try: # if possible, reads from the file with length one less than desired
             smaller_braids = []
             with open(f'../braid_lists/b{numStrands}_k{length-1}.csv', 'r', newline='') as file:
                 #reader = csv.reader(file, delimiter=',')
-                smaller_braids = parseBraidFile(file)
             # print('try', smaller_braids) # for debugging, seemingly working correctly
             new_braids = [s+[j] for s in smaller_braids for j in braid_gens] #this is much faster.Also eliminates adding a trivial pair j,-j to the end of a braid.
             # for i in smaller_braids: # **process of creating new_braids can probably be made more efficient**
