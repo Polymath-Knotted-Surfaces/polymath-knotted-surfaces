@@ -105,6 +105,18 @@ def is_triplane(T1, T2, T3):
     L31 = attach(T3, T1)
     return is_unlink(L12) and is_unlink(L23) and is_unlink(L31)
 
+#checks a triple (cap,cap,cap,braid) to see if it makes a valid triplane diagram
+def tupleCheck(c1:list[tuple[int,...]], c2:list[tuple[int,...]], c3:list[tuple[int,...]], b:list[int], *args, **kwargs) -> bool:
+    del(args)
+    del(kwargs)
+    try:
+        n = 2*len(c1)
+        red = pairs_to_cap(c1)
+        blue = pairs_to_cap(c2)
+        green = add_cap(tuple_to_braid(b, n),c3)
+        return is_triplane(red, blue, green)
+    except:
+        return None
 
 #######################################################################
 

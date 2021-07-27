@@ -39,10 +39,10 @@ def paren_idx_match(s:str, i:int, start: str='(', stop: str=')') -> int:
     return -1 #error return value
 	
 	
-def dyck_to_caps(x: str) -> list[tuple[int]]:
+def dyck_to_caps(x: str) -> list[tuple[int,...]]:
 	# x is a dyck word of matched parthenteses.
 	# returns the corresponding cap diagram to the dyck word.
-	return tuple([(i+1, paren_idx_match(x, i)+1) for i, s in enumerate(x) if s == "("])
+	return [(i+1, paren_idx_match(x, i)+1) for i, s in enumerate(x) if s == "("]
 
-def gen_caps(bridge:int) -> c.Generator[list[tuple[int]], None, None]:
+def gen_caps(bridge:int) -> c.Generator[list[tuple[int,...]], None, None]:
     return map(dyck_to_caps, dyck(bridge))
