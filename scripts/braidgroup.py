@@ -66,7 +66,8 @@ def elimBraids(numStrands:int, braids: list[list[int]]) -> list[list[int]]: #for
     bstrings = list(map(lambda b: ','.join(map(str,b)), newBraids))
     newbstrings = list(filter(lambda s: all([bool(f'{j},{-j}' not in s) for j in braidGens(numStrands)]), bstrings))
     #looks for ANY occurance of the pattern 'j,-j' or '-j,j' and if it occurs, throws out the word.
-    return list(map(lambda s: map(int, s.split(',')), newbstrings)) #converts each braid-as-string back to braid-as-list                    
+    result = list(map(lambda s: list(map(int, s.split(','))), newbstrings)) #converts each braid-as-string back to braid-as-list
+    return result
      
     #return [(braids[k], v) for k, v in r.items()] #returns braid_as_tuple, braid_as_word
 
@@ -86,54 +87,29 @@ def braidsFromFile(numStrands:int, length:int) -> list[tuple[int]]:
         return braidsNoRepeats(numStrands, length)
 
 def parseBraidFile(file) -> list[list[int]]: #reads a file and returns the correctly formatted list of list of integers.
-    reader = csv.reader(file, delimiter=',') #read the csv file, delimited by commas.
+    reader = csv.reader(file, delimiter = ',') #read the csv file, delimited by commas.
     return [[int(j) for j in row] for row in reader] #iterates row-by-row and cell-by-cell, converting everything to ints.
 
+# returns a list of all braids on a given number of strands of a given length
+# no repeats within the list for the given length, but there are definitely repeats between lengths
 def braidsNoRepeats(numStrands:int, length:int, recalculate:bool=False) ->  list[list[int]]:
-    if numStrands < 0:# or numStrands % 2 != 0: #this can be general! We can allow odd numbers of strands so others could use this code.
+    if numStrands < 0:
         raise ValueError('numStrands must be a positive number')
     try:
         if recalculate:
             raise ValueError('recalculate = True') # go to the except block
         with open(f'../braid_lists/b{numStrands}_k{length}.csv', 'r', newline='') as file:
-            # reader = csv.reader(file)
-            # return list(reader) # if the desired list has already been created, returns it
             return parseBraidFile(file) #returns original braids.
     except:
-        # print('excepted') # for debugging
         if length == 0: # this 'if' instead of storing an empty file
             return [[]]
         
         braid_gens = braidGens(numStrands)
         
         if length == 1: # will only run the first time braidsNoRepeats is called for a specific numStrands value
-            reduced_braids = [[i] for i in range(-numStrands+1,numStrands) if i != 0] #no need for this line, we already have braid_gens that has this exact list.
-            return createFile(numStrands, length, reduced_braids)
-        try: # if possible, reads from the file with length one less than desired
-            smaller_braids = []
-            with open(f'../braid_lists/b{numStrands}_k{length-1}.csv', 'r', newline='') as file:
-                #reader = csv.reader(file, delimiter=',')
-                smaller_braids = parseBraidFile(file)
-            # print('try', smaller_braids) # for debugging, seemingly working correctly
-            new_braids = [s+[j] for s in smaller_braids for j in braid_gens] #this is much faster.Also eliminates adding a trivial pair j,-j to the end of a braid.
-            # for i in smaller_braids: # **process of creating new_braids can probably be made more efficient**
-                # for j in braid_gens:
-                    # new_braids.append([i[0], j])
-            # print('try', new_braids) # for debugging, seemingly working correctly
-            #with_elements = list(zip(*elimBraids(numStrands, new_braids)))
-            #reduced_braids = list(with_elements[0]) # because I think with_elements is a list(tuple(...)) at this point
-            #reduced_braids = list(map(lambda t: get(0, t), elimBraids(numStrands, new_braids)))
-            reduced_braids = elimBraids(numStrands, new_braids)
-            # print('try', reduced_braids)
-            return createFile(numStrands, length, reduced_braids)
-        except FileNotFoundError: # if the file with length one less than desired does not exist, create it with a recursive call
-            smaller_braids = braidsNoRepeats(numStrands, length - 1) 
-            new_braids = [ s+[j] for s in smaller_braids for j in braid_gens] #this is much faster than two for loops. This eliminates a bunch of redundant words.
-            # for i in smaller_braids:
-                # for j in braid_gens:
-                    # new_braids.append([i[0], j])
-            #reduced_braids = list(map(lambda t: get(0, t), elimBraids(numStrands, new_braids)))
-            reduced_braids = elimBraids(numStrands, newBraids)
-            #with_elements = list(zip(*elimBraids(numStrands, new_braids)))
-            #reduced_braids = list(with_elements[0]) # because I think with_elements is a list(tuple(...)) at this point
-            return createFile(numStrands, length, reduced_braids)
+            return createFile(numStrands, length, [[j] for j in braid_gens])
+        
+        smaller_braids = braidsNoRepeats(numStrands, length - 1) # gets the smaller braids with a recursive call
+        new_braids = [ s+[j] for s in smaller_braids for j in braid_gens ] # fast way to append generators
+        reduced_braids = elimBraids(numStrands, new_braids)
+        return createFile(numStrands, length, reduced_braids)
