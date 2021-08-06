@@ -7,10 +7,13 @@ from operator import mul, add, pow
 import collections.abc as c
 import csv
 import os
+from typing import NewType, List, Tuple, Dict, Generator
+
+
 
 def dictTranspose(d:dict) -> dict: #returns a dict with keys the (hashed versions of) d.values and values the keys of d matching the (hashed) value.
     new_dict = dict()
-    temp = {k: ( v if type(v) is not list else tuple(v) ) for k,v in d.items()}
+    temp = {k: v if type(v) is not list else tuple(v) for k,v in d.items()}
     for key, value in temp.items():
         if value in new_dict:
             new_dict[value].append(key)
@@ -19,7 +22,7 @@ def dictTranspose(d:dict) -> dict: #returns a dict with keys the (hashed version
     return new_dict
 
 
-def BraidGroup(n:int) -> FpGroup:
+def myBraidGroup(n:int) -> FpGroup:
     generators = str().join([f"s{i}," for i in range(1, n)])
     F, *gens= free_group(generators)
     relations = \
@@ -30,24 +33,24 @@ def BraidGroup(n:int) -> FpGroup:
     #the first comprehension generates the commutator relators; the second comprehension generates the adjacency relators
     return FpGroup(F, relations)
 
-def braidGens(n:int) -> list[int]:
+def braidGens(n:int) -> List[int]:
    return [i for i in range(-n+1,n) if i != 0] #this function generates the list -n+1, -n+2, ..., -1, 1, 2, ..., n-1
 
 @curry
-def words(a:list[str], k:int) -> c.Generator[list[str], None, None]: #generate all words on a of length k
+def words(a:List[str], k:int) -> Generator[List[str], None, None]: #generate all words on a of length k
    return product(a, repeat=k)
 
 #words(A(n)) is a new function w whose input is k, an integer, and it spits out all words of length k on A.
 
 @curry
-def wordToBraid(group: FpGroup, word: list[int]) -> list[scf.FreeGroupElement]:
+def wordToBraid(group: FpGroup, word: List[int]) -> List[scf.FreeGroupElement]:
     # G = BraidGroup(n)
     gens = group.generators
     return reduce(mul, [gens[i-1] if i>=1 else gens[abs(i)-1]**(-1) for i in word]) #this returns the product (mul) of corresponding group.generators for each entry in word.
 
 
 
-def genBraids(numStrands: int, length: int) -> c.Generator[list[int], None, None]:
+def genBraids(numStrands: int, length: int) -> Generator[List[int], None, None]:
     #G = BraidGroup(numStrands)
     return pipe(numStrands,
                 braidGens, #generates the braids
@@ -55,8 +58,8 @@ def genBraids(numStrands: int, length: int) -> c.Generator[list[int], None, None
                 #map(wordToBraid(G))
                 )
                 
-def elimBraids(numStrands:int, braids: list[list[int]]) -> list[list[int]]: #formerly -> list[tuple[list[int], scf.FreeGroupElement]]:
-    G = BraidGroup(numStrands)
+def elimBraids(numStrands:int, braids: List[List[int]]) -> List[List[int]]: #formerly -> List[Tuple[List[int], scf.FreeGroupElement]]:
+    G = myBraidGroup(numStrands)
     m = {i:wordToBraid(G, b) for i,b in enumerate(braids)} #generates a dictionary with integer keys and values words in G.
     mt = dictTranspose(m) #transposes m so that each braid word corresponds to a bunch of indices.
     r = {k[0]:list(m[k[0]]) for v, k in mt.items()} #keep only one braid word for each braid type. here k is a list, so get the first entry.
@@ -73,26 +76,26 @@ def elimBraids(numStrands:int, braids: list[list[int]]) -> list[list[int]]: #for
 
 # creates a file with a standard way of naming and writes reduced_braids to it
 # mainly just here to unclutter braidsNoRepeats()
-def createFile(numStrands:int, length:int, reduced_braids:list[list[int]]) -> list[list[int]]:
+def createFile(numStrands:int, length:int, reduced_braids:List[List[int]]) -> List[List[int]]:
     with open(f'../braid_lists/b{numStrands}_k{length}.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(reduced_braids)
     return reduced_braids
 
-def braidsFromFile(numStrands:int, length:int) -> list[tuple[int]]:
+def braidsFromFile(numStrands:int, length:int) -> List[Tuple[int]]:
     try:
         with open(f'../braid_lists/b{numStrands}_k{length}.csv', 'r', newline='') as file:
             return parseBraidFile(file)
     except FileNotFoundError:
         return braidsNoRepeats(numStrands, length)
 
-def parseBraidFile(file) -> list[list[int]]: #reads a file and returns the correctly formatted list of list of integers.
+def parseBraidFile(file) -> List[List[int]]: #reads a file and returns the correctly formatted list of list of integers.
     reader = csv.reader(file, delimiter = ',') #read the csv file, delimited by commas.
     return [[int(j) for j in row] for row in reader] #iterates row-by-row and cell-by-cell, converting everything to ints.
 
 # returns a list of all braids on a given number of strands of a given length
 # no repeats within the list for the given length, but there are definitely repeats between lengths
-def braidsNoRepeats(numStrands:int, length:int, recalculate:bool=False) ->  list[list[int]]:
+def braidsNoRepeats(numStrands:int, length:int, recalculate:bool=False) ->  List[List[int]]:
     if numStrands < 0:
         raise ValueError('numStrands must be a positive number')
     try:

@@ -5,6 +5,8 @@ import sys
 import random
 from cytoolz.curried import *
 from snappy import Link
+from typing import NewType, List, Tuple
+
 sys.setrecursionlimit(1000000)
 
 
@@ -51,7 +53,7 @@ def pairs_to_cap(pairs):
         raise ValueError("The braid and cap must have the same number of strands")
     return T * cap'''
 
-# attaches a cap diagram in the form of a list[list[int]] to the top of a tangle 
+# attaches a cap diagram in the form of a List[List[int]] to the top of a tangle 
 def add_cap(tang: s.Tangle, cap):
     if tang.n != 2 * len(cap):
         raise ValueError("The braid and cap must have the same number of strands")
@@ -106,7 +108,7 @@ def is_triplane(T1, T2, T3):
     return is_unlink(L12) and is_unlink(L23) and is_unlink(L31)
 
 #checks a triple (cap,cap,cap,braid) to see if it makes a valid triplane diagram
-def tupleCheck(c1:list[tuple[int,...]], c2:list[tuple[int,...]], c3:list[tuple[int,...]], b:list[int], *args, **kwargs) -> bool:
+def tupleCheck(c1:List[Tuple[int,...]], c2:List[Tuple[int,...]], c3:List[Tuple[int,...]], b:List[int], *args, **kwargs) -> bool:
     del(args)
     del(kwargs)
     try:

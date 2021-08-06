@@ -1,12 +1,13 @@
 from itertools import product
 from collections import deque
 from functools import cache
-import collections.abc as c
+from typing import NewType, List, Tuple, Dict, Generator
+
 
 # Generate all Dyck words of length 2*num, recursively
 # A Dyck word is a word like "(())()(()())"
 @cache
-def dyck(num: int, rcache: dict[int, list[str]]={0: ['']}) -> list[str]:
+def dyck(num: int, rcache: Dict[int, List[str]]={0: ['']}) -> List[str]:
     if num not in rcache:
         rcache[num] = [f'({t[0]}){str().join(t[1:])}' for i in range(1, num + 1)
 			for t in product(dyck(i - 1), dyck(num - i))]
@@ -39,10 +40,10 @@ def paren_idx_match(s:str, i:int, start: str='(', stop: str=')') -> int:
     return -1 #error return value
 	
 	
-def dyck_to_caps(x: str) -> list[tuple[int,...]]:
+def dyck_to_caps(x: str) -> List[Tuple[int,...]]:
 	# x is a dyck word of matched parthenteses.
 	# returns the corresponding cap diagram to the dyck word.
 	return [(i+1, paren_idx_match(x, i)+1) for i, s in enumerate(x) if s == "("]
 
-def gen_caps(bridge:int) -> c.Generator[list[tuple[int,...]], None, None]:
+def gen_caps(bridge:int) -> Generator[List[Tuple[int,...]], None, None]:
     return map(dyck_to_caps, dyck(bridge))
